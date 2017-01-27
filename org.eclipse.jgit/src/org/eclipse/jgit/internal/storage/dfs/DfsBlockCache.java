@@ -260,10 +260,6 @@ public final class DfsBlockCache {
 	}
 
 	DfsPackFile getOrCreate(DfsPackDescription dsc, DfsPackKey key) {
-		// TODO This table grows without bound. It needs to clean up
-		// entries that aren't in cache anymore, and aren't being used
-		// by a live DfsObjDatabase reference.
-
 		DfsPackFile pack = packCache.get(dsc);
 		if (pack != null && !pack.invalid()) {
 			return pack;
@@ -405,6 +401,7 @@ public final class DfsBlockCache {
 					dead.value = null;
 					live -= dead.size;
 					dead.pack.cachedSize.addAndGet(-dead.size);
+					evictFromPackCache(dead.pack);
 					statEvict++;
 				} while (maxBytes < live);
 				clockHand = prev;
@@ -419,6 +416,15 @@ public final class DfsBlockCache {
 		clockLock.lock();
 		liveBytes -= credit;
 		clockLock.unlock();
+	}
+
+	private void evictFromPackCache(DfsPackKey keyToRemove) {
+		for (Map.Entry<DfsPackDescription, DfsPackFile> cacheEntry : packCache.entrySet()) {
+			if (cacheEntry.getValue().getPackKey().equals(keyToRemove)) {
+				remove(cacheEntry.getValue());
+				return;
+			}
+		}
 	}
 
 	@SuppressWarnings("unchecked")

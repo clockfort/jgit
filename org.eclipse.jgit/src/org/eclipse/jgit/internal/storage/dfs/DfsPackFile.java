@@ -185,6 +185,11 @@ public final class DfsPackFile {
 		return packDesc;
 	}
 
+	/** @return Key that refers to this pack file in the cache */
+	public DfsPackKey getPackKey() {
+		return key;
+	}
+
 	/**
 	 * @return whether the pack index file is loaded and cached in memory.
 	 */
